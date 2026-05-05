@@ -468,6 +468,13 @@ hicpro/mRSstat:
   contents: "Valid_interaction_pairs"
 hicpro/assplit:
   fn: "*assplit.stat"
+hicstuff/pipeline_stats:
+  - fn: "*.txt"
+    contents: "## hicstuff:"
+    num_lines: 100
+  - fn: "*.log"
+    contents: "## hicstuff:"
+    num_lines: 10
 hifiasm:
   contents: "[M::ha_analyze_count]"
   num_lines: 1
