@@ -475,6 +475,11 @@ hicstuff/pipeline_stats:
   - fn: "*.log"
     contents: "## hicstuff:"
     num_lines: 10
+hicstuff/distancelaw:
+  - contents: "## hicstuff"
+    num_lines: 5
+  - contents: "## distance_law"
+    num_lines: 5
 hifiasm:
   contents: "[M::ha_analyze_count]"
   num_lines: 1

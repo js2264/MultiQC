@@ -1,11 +1,27 @@
 import ast
 import logging
+import math
 import re
+from typing import Dict, Optional
 
 from multiqc.base_module import BaseMultiqcModule, ModuleNoSamplesFound
-from multiqc.plots import bargraph
+from multiqc.plots import bargraph, linegraph
 
 log = logging.getLogger(__name__)
+
+# Colour palette (tab10) used to assign one colour per sample in the distance-law plot
+_SAMPLE_COLOURS = [
+    "#1f77b4",
+    "#ff7f0e",
+    "#2ca02c",
+    "#d62728",
+    "#9467bd",
+    "#8c564b",
+    "#e377c2",
+    "#7f7f7f",
+    "#bcbd22",
+    "#17becf",
+]
 
 
 class MultiqcModule(BaseMultiqcModule):
@@ -52,14 +68,33 @@ class MultiqcModule(BaseMultiqcModule):
 
         self.hicstuff_data = self.ignore_samples(self.hicstuff_data)
 
-        if not self.hicstuff_data:
+        # Distance-law files
+        # Structure: {s_name: {chrom: {start_bp: p_s, ...}}}
+        self.hicstuff_distancelaw: Dict[str, Dict[str, Dict[int, float]]] = {}
+        for f in self.find_log_files("hicstuff/distancelaw"):
+            parsed = self.parse_distancelaw(f)
+            if parsed is not None:
+                s_name = self.clean_s_name(f["s_name"], f)
+                self.hicstuff_distancelaw[s_name] = parsed
+                self.add_data_source(f, s_name)
+
+        self.hicstuff_distancelaw = self.ignore_samples(self.hicstuff_distancelaw)
+
+        if not self.hicstuff_data and not self.hicstuff_distancelaw:
             raise ModuleNoSamplesFound
 
-        log.info(f"Found {len(self.hicstuff_data)} reports")
+        if self.hicstuff_data:
+            log.info(f"Found {len(self.hicstuff_data)} pipeline reports")
+        if self.hicstuff_distancelaw:
+            log.info(f"Found {len(self.hicstuff_distancelaw)} distance-law files")
 
-        self.hicstuff_stats_table()
-        self.hicstuff_read_fate_plot()
-        self.write_data_file(self.hicstuff_data, "multiqc_hicstuff")
+        if self.hicstuff_data:
+            self.hicstuff_stats_table()
+            self.hicstuff_read_fate_plot()
+            self.write_data_file(self.hicstuff_data, "multiqc_hicstuff")
+
+        if self.hicstuff_distancelaw:
+            self.hicstuff_distance_law_plot()
 
     def parse_hicstuff_log(self, f):
         """Parse a hicstuff log file and return the stats dict, or None if not found."""
@@ -76,6 +111,131 @@ class MultiqcModule(BaseMultiqcModule):
         if version_match:
             stats["version"] = version_match.group(1)
         return stats
+
+    def parse_distancelaw(self, f) -> Optional[Dict[str, Dict[int, float]]]:
+        """Parse a hicstuff distance-law TSV file.
+
+        Returns a dict mapping chromosome name -> {start_bp: p_s}, or None if the
+        file does not look like a valid distance-law file.
+        """
+        content = f["f"]
+        # Must contain the distance_law header marker
+        if "## distance_law" not in content:
+            return None
+
+        chroms: Dict[str, Dict[int, float]] = {}
+        for line in content.splitlines():
+            if line.startswith("#") or not line.strip():
+                continue
+            parts = line.split("\t")
+            if len(parts) < 2:
+                continue
+            try:
+                start_bp = int(float(parts[0]))
+                p_s = float(parts[1])
+            except ValueError:
+                continue
+            chrom = parts[2].strip() if len(parts) >= 3 else "genome"
+            chroms.setdefault(chrom, {})[start_bp] = p_s
+
+        return chroms if chroms else None
+
+    def hicstuff_distance_law_plot(self):
+        """Generate P(s) distance-law line graph and slope analysis."""
+        # Build flat series dicts and colours dict
+        plot_data: Dict[str, Dict[int, float]] = {}
+        slope_data: Dict[str, Dict[int, float]] = {}
+        colours: Dict[str, str] = {}
+
+        sample_names = sorted(self.hicstuff_distancelaw.keys())
+        for idx, s_name in enumerate(sample_names):
+            colour = _SAMPLE_COLOURS[idx % len(_SAMPLE_COLOURS)]
+            chrom_data = self.hicstuff_distancelaw[s_name]
+            chroms = sorted(chrom_data.keys())
+            for chrom in chroms:
+                series_key = f"{s_name} ({chrom})" if len(chroms) > 1 else s_name
+                plot_data[series_key] = chrom_data[chrom]
+
+                # Calculate slopes (derivative in log-log space)
+                sorted_bp = sorted(chrom_data[chrom].keys())
+                slopes = {}
+                for i in range(1, len(sorted_bp)):
+                    x1, x2 = sorted_bp[i - 1], sorted_bp[i]
+                    y1, y2 = chrom_data[chrom][x1], chrom_data[chrom][x2]
+                    # Avoid log of zero or negative values
+                    if y1 > 0 and y2 > 0 and x1 > 0 and x2 > 0:
+                        # Slope in log-log space: dlog(y)/dlog(x)
+                        slope = (math.log10(y2) - math.log10(y1)) / (math.log10(x2) - math.log10(x1))
+                        slopes[x2] = slope
+                slope_data[series_key] = slopes
+                colours[series_key] = colour
+
+        self.add_section(
+            name="Distance law P(s)",
+            anchor="hicstuff-distance-law-ps",
+            description=(
+                "Contact probability P(s) as a function of genomic distance s. "
+                "Each curve represents one sample (or chromosome within a sample). "
+                "Chromosomes from the same sample share the same colour."
+            ),
+            helptext="""
+                The distance law (also called P(s) curve) describes how the contact
+                probability between two genomic loci decreases as the distance between
+                them increases. For a typical mammalian genome, P(s) follows a power law
+                with a slope of approximately −1 at intermediate distances.
+
+                When a file contains data for multiple chromosomes, each chromosome is
+                shown as a separate line but all lines for the same sample share the same
+                colour so they can be visually grouped.
+            """,
+            plot=linegraph.plot(
+                plot_data,
+                pconfig={
+                    "id": "hicstuff_distance_law_ps",
+                    "title": "hicstuff: Distance law P(s)",
+                    "xlab": "Genomic distance (bp)",
+                    "ylab": "P(s)",
+                    "colors": colours,
+                    "xlog": True,
+                    "ylog": True,
+                    "xmin": 1000,
+                    "smooth_points": 500,
+                    "tt_label": "{point.x} bp: {point.y:.2e}",
+                },
+            ),
+        )
+
+        self.add_section(
+            name="Distance law Slope",
+            anchor="hicstuff-distance-law-slope",
+            description=(
+                "Power-law slope (derivative in log-log space) of the distance law. "
+                "A slope near −1 indicates a typical power law."
+            ),
+            helptext="""
+                The slope is calculated as dlog(P)/dlog(s) in log-log space.
+                A slope of approximately −1 is typical for mammalian genomes at
+                intermediate genomic distances. Steeper slopes (more negative) indicate
+                faster decay of contact probability with distance.
+            """,
+            plot=linegraph.plot(
+                slope_data,
+                pconfig={
+                    "id": "hicstuff_distance_law_slope",
+                    "title": "hicstuff: Distance law Slope",
+                    "xlab": "Genomic distance (bp)",
+                    "ylab": "dlog(P)/dlog(s)",
+                    "colors": colours,
+                    "xlog": True,
+                    "ylog": False,
+                    "xmin": 1000,
+                    "ymin": -5,
+                    "ymax": 2,
+                    "smooth_points": 500,
+                    "tt_label": "{point.x} bp: {point.y:.2f}",
+                },
+            ),
+        )
 
     def hicstuff_stats_table(self):
         """Add hicstuff stats to the general stats table."""
