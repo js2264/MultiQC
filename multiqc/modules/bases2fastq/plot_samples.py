@@ -1,10 +1,11 @@
-from typing import Any, Dict, List, cast
+from typing import Any, Dict, List, Optional, cast
 
 from natsort import natsorted
 
 from multiqc.plots import bargraph, linegraph, table
 from multiqc.plots.table_object import ColumnDict
 from multiqc import config
+from multiqc.types import SectionAlert
 
 
 def _drop_low_samples(data: Dict[str, Dict[Any, float]], threshold: float = 0.0) -> List[str]:
@@ -20,45 +21,20 @@ def _drop_low_samples(data: Dict[str, Dict[Any, float]], threshold: float = 0.0)
     return natsorted(dropped)
 
 
-def _filtered_samples_alert(dropped: List[str], metric: str, threshold_label: str) -> str:
-    """Bootstrap alert listing samples removed for being below a threshold.
-
-    `threshold_label` is appended after the metric name in the alert text — e.g.
-    "(all zero)" or "(< 1%)". Long lists are wrapped in <details>.
-    """
+def _filtered_samples_alert(dropped: List[str], metric: str, threshold_label: str) -> Optional[SectionAlert]:
     if not dropped:
-        return ""
+        return None
     n = len(dropped)
-    sample_list = ", ".join(f"<code>{s}</code>" for s in dropped)
-    if n > 10:
-        body = (
-            f"<details><summary>Show {n} sample names</summary><p style='margin-top:0.5em'>{sample_list}</p></details>"
-        )
-    else:
-        body = sample_list
-    return (
-        f'<div class="alert alert-info">'
-        f"<strong>{n} sample{'s' if n != 1 else ''}</strong> with negligible {metric} "
-        f"{threshold_label} hidden from plot: {body}"
-        f"</div>"
+    return SectionAlert(
+        message=f"**{n} sample{'s' if n != 1 else ''}** with negligible {metric} {threshold_label} hidden from plot.",
+        affected_samples=dropped,
     )
 
 
 def _plot_html_with_alert(plot_content, pconfig, base_description, alert):
-    """Pair the linegraph plot with an alert about filtered samples.
-
-    Returns ``(plot_html, description)``. When `plot_content` is empty the
-    alert takes the plot slot so the section still renders — `add_section`
-    gates on plot/content, not description. Otherwise the alert appends to
-    the description with a blank line separator, so markdown treats the
-    ``<div>`` as a sibling block rather than nesting it inside a ``<p>``
-    (which would be invalid HTML and break layout).
-    """
     if not plot_content:
-        return alert, base_description
-    plot_html = linegraph.plot(plot_content, pconfig=pconfig)
-    description = base_description + (f"\n\n{alert}" if alert else "")
-    return plot_html, description
+        return None, base_description, alert
+    return linegraph.plot(plot_content, pconfig=pconfig), base_description, alert
 
 
 def _sample_has_reads(sample_entry: dict) -> bool:
@@ -224,7 +200,7 @@ def tabulate_sample_stats(sample_data, group_lookup_dict, project_lookup_dict, s
         - Reads Eliminated: Number of reads eliminated across lanes.\n
         - Percent Mismatch: Percent Mismatch.\n
     """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, None
 
 
 def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, color_dict):
@@ -241,7 +217,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
                 "ylab": "Percentage of Total Reads",
             },
         )
-        return plot_html, "Per Cycle Base Content", "base_content", "", "", empty_data
+        return plot_html, "Per Cycle Base Content", "base_content", "", "", empty_data, None
 
     # Prep the data
     data: Dict[str, Dict[int, Any]] = {}
@@ -307,7 +283,7 @@ def sequence_content_plot(sample_data, group_lookup_dict, project_lookup_dict, c
     it suggests that the analysis pipeline was unable to interpret the data well enough to
     make valid base calls.
     """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, None
 
 
 def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict, color_dict):
@@ -323,7 +299,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict
                 "ylab": "Percentage of N bases",
             },
         )
-        return plot_html, "Per Cycle N Content", "n_content", "", "", empty_data
+        return plot_html, "Per Cycle N Content", "n_content", "", "", empty_data, None
 
     data: Dict[str, Dict[int, float]] = {}
     r1r2_split = 0
@@ -375,12 +351,12 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict
         "id": "bases2fastq_per_cycle_n_content",
         "title": "bases2fastq: Per Cycle N Content Percentage",
     }
-    alert = _filtered_samples_alert(dropped, "N content", "(&lt; 1%)")
+    alert = _filtered_samples_alert(dropped, "N content", "(less than 1%)")
     base_description = (
         'Percentage of unidentified bases ("N" bases) by each sequencing cycle. '
         "Read 1 and Read 2 are separated by a red dashed line."
     )
-    plot_html, description = _plot_html_with_alert(plot_content, pconfig, base_description, alert)
+    plot_html, description, alert = _plot_html_with_alert(plot_content, pconfig, base_description, alert)
     plot_name = "Per Cycle N Content"
     anchor = "n_content"
     helptext = """
@@ -393,7 +369,7 @@ def plot_per_cycle_N_content(sample_data, group_lookup_dict, project_lookup_dict
     it suggests that the analysis pipeline was unable to interpret the data well enough to
     make valid base calls.
     """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, alert
 
 
 def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, sample_color):
@@ -412,7 +388,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
                 "ylab": "Percentage of reads that have GC (%)",
             },
         )
-        return plot_html, "Per Sample GC Histogram", "gc_histogram", "", "", empty_gc_hist
+        return plot_html, "Per Sample GC Histogram", "gc_histogram", "", "", empty_gc_hist, None
 
     gc_hist_dict: Dict[str, Dict[float, float]] = {}
     for s_name in natsorted(samples_with_reads):
@@ -470,7 +446,7 @@ def plot_per_read_gc_hist(sample_data, group_lookup_dict, project_lookup_dict, s
     be flagged as an error by the module since it doesn't know what your genome's
     GC content should be.
     """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, None
 
 
 def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sample_color):
@@ -489,7 +465,7 @@ def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sa
                 "ylab": "% of Sequences",
             },
         )
-        return plot_html, "Per Sample Adapter Content", "adapter_content", "", "", empty_content
+        return plot_html, "Per Sample Adapter Content", "adapter_content", "", "", empty_content, None
 
     plot_content: Dict[str, Dict[int, float]] = {}
 
@@ -529,9 +505,9 @@ def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sa
     }
     plot_name = "Per Sample Adapter Content"
     pconfig.update({"colors": sample_color})
-    alert = _filtered_samples_alert(dropped, "adapter content", "(&lt; 1%)")
+    alert = _filtered_samples_alert(dropped, "adapter content", "(less than 1%)")
     base_description = "Adapter content per cycle. Read 1 and Read 2 are separated by a red dashed line."
-    plot_html, description = _plot_html_with_alert(plot_content, pconfig, base_description, alert)
+    plot_html, description, alert = _plot_html_with_alert(plot_content, pconfig, base_description, alert)
     anchor = "adapter_content"
     helptext = """
     The plot shows a cumulative percentage count of the proportion
@@ -540,4 +516,4 @@ def plot_adapter_content(sample_data, group_lookup_dict, project_lookup_dict, sa
     right through to the end of the read, so the percentages you see will only
     increase as the read length goes on.
     """
-    return plot_html, plot_name, anchor, description, helptext, plot_content
+    return plot_html, plot_name, anchor, description, helptext, plot_content, alert
