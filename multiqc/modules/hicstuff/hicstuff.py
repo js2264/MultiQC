@@ -119,14 +119,10 @@ class MultiqcModule(BaseMultiqcModule):
     def parse_distancelaw(self, f) -> dict[str, dict[int, float]] | None:
         """Parse a hicstuff distance-law TSV file.
 
-        Returns a dict mapping chromosome name -> {start_bp: p_s}, or None if the
-        file does not look like a valid distance-law file.
+        Returns a dict mapping chromosome name -> {start_bp: p_s}, or None if no
+        data rows were parsed.
         """
         content = f["f"]
-        # Must contain the distance_law header marker
-        if "## distance_law" not in content:
-            return None
-
         chroms: dict[str, dict[int, float]] = {}
         for line in content.splitlines():
             if line.startswith("#") or not line.strip():
