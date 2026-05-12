@@ -7,7 +7,7 @@
     <link
       rel="icon"
       type="image/svg+xml"
-      href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 250 250'%3E%3Cpath fill='%23F18046' d='M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z'/%3E%3Cpath fill='%23F18046' d='M119.61 203.919C80.16 201.299 48.55 169.609 46.07 130.119H0C2.56 195.079 54.68 247.299 119.61 249.999V203.919Z'/%3E%3Cpath fill='%23F18046' d='M130.389 46.08C169.839 48.7 201.449 80.39 203.929 119.88H249.999C247.439 54.92 195.319 2.7 130.389 0V46.08Z'/%3E%3Cpath fill='%23F18046' d='M249.999 203.919C210.549 201.299 178.939 169.609 176.459 130.119H130.389C132.949 195.079 185.069 247.299 249.999 249.999V203.919Z'/%3E%3C/svg%3E"
+      href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 250 250'%3E%3Cpath fill='%23087f68' d='M46.08 119.61C48.7 80.16 80.39 48.55 119.88 46.07V0C54.92 2.56 2.7 54.68 0 119.61H46.08Z'/%3E%3Cpath fill='%23087f68' d='M119.61 203.919C80.16 201.299 48.55 169.609 46.07 130.119H0C2.56 195.079 54.68 247.299 119.61 249.999V203.919Z'/%3E%3Cpath fill='%23087f68' d='M130.389 46.08C169.839 48.7 201.449 80.39 203.929 119.88H249.999C247.439 54.92 195.319 2.7 130.389 0V46.08Z'/%3E%3Cpath fill='%23087f68' d='M249.999 203.919C210.549 201.299 178.939 169.609 176.459 130.119H130.389C132.949 195.079 185.069 247.299 249.999 249.999V203.919Z'/%3E%3C/svg%3E"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -28,7 +28,6 @@
         --teal-border: #0cae8e; /* --color-nextflow-700 */
         --teal-border-active: #087f68; /* --color-nextflow-900 */
         --teal-tint: #e2f7f3;
-        --orange: #f18046; /* --color-multiqc-600 (logo only) */
         --paper: #ffffff;
         --surface-soft: #f8f8f8; /* --color-brand-50 */
         --border: rgba(0, 0, 0, 0.15);
@@ -300,6 +299,18 @@
       body.show-uncommon .form-group.uncommon {
         display: block;
       }
+      .section-nav .nav-advanced-only,
+      .section-heading.advanced-only {
+        display: none;
+      }
+      body.show-uncommon .section-nav .nav-advanced-only,
+      body.search-active .section-nav .nav-advanced-only {
+        display: list-item;
+      }
+      body.show-uncommon .section-heading.advanced-only,
+      body.search-active .section-heading.advanced-only {
+        display: block;
+      }
       body.show-uncommon .form-group.uncommon .field-label::after {
         content: "advanced";
         margin-left: 8px;
@@ -350,33 +361,39 @@
         border-color: rgba(255, 255, 255, 0.25);
       }
 
-      .sidebar-links {
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 12px 18px 18px;
+      .welcome-links {
         display: flex;
-        flex-direction: column;
-        gap: 2px;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 18px;
       }
-      .sidebar-links a {
-        color: rgba(255, 255, 255, 0.55);
-        text-decoration: none;
-        font-size: 0.82em;
-        padding: 5px 10px;
+      .welcome-links a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border: 1px solid var(--border);
         border-radius: 4px;
+        background: var(--paper);
+        color: var(--ink);
+        text-decoration: none;
+        font-size: 0.9em;
+        font-weight: 500;
         transition:
           background 0.15s ease,
+          border-color 0.15s ease,
           color 0.15s ease;
       }
-      .sidebar-links a:hover {
-        background: rgba(255, 255, 255, 0.06);
-        color: white;
+      .welcome-links a:hover {
+        background: var(--surface-soft);
+        border-color: var(--ink-soft);
+        color: var(--navy);
       }
-      .sidebar-links a::before {
+      .welcome-links a::after {
         content: "↗";
-        display: inline-block;
-        margin-right: 8px;
-        color: var(--teal);
-        font-size: 0.85em;
+        color: var(--teal-border);
+        font-size: 0.95em;
+        line-height: 1;
       }
 
       /* Right-hand main column */
@@ -573,6 +590,22 @@
         margin-bottom: 12px;
         line-height: 1.5;
       }
+      .form-group .description code {
+        background: var(--surface-soft);
+        border: 1px solid var(--border-soft);
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Monaco, monospace;
+        font-size: 0.88em;
+        color: var(--ink);
+      }
+      .form-group .description a {
+        color: var(--teal-border);
+        text-decoration: underline;
+      }
+      .form-group .description a:hover {
+        color: var(--teal-border-active);
+      }
       .default-badge {
         background: var(--surface-soft);
         border: 1px solid var(--border-soft);
@@ -675,7 +708,6 @@
         border-color: #d04949 !important;
       }
       .form-group input,
-      .form-group select,
       .form-group textarea {
         width: 100%;
         padding: 9px 12px;
@@ -699,26 +731,17 @@
         color: var(--ink);
       }
       .form-group input:focus,
-      .form-group select:focus,
       .form-group textarea:focus {
         outline: none;
         border-color: var(--teal-border);
         box-shadow: 0 0 0 3px rgba(49, 201, 172, 0.2);
       }
-      .form-group select {
-        appearance: none;
-        -webkit-appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%235c5767' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 12px center;
-        padding-right: 36px;
-      }
 
       .bool-toggle {
         display: inline-flex;
+        flex-wrap: wrap;
         border: 1px solid var(--border);
         border-radius: 0;
-        overflow: hidden;
         background: var(--paper);
       }
       .bool-toggle-btn {
@@ -877,8 +900,6 @@
         font-size: 0.88em;
         line-height: 1.6;
         white-space: pre-wrap;
-        max-height: 420px;
-        overflow-y: auto;
         margin-top: 16px;
       }
       /* Minimal YAML highlight theme tuned to the navy code surface */
@@ -912,10 +933,11 @@
       }
       .yaml-preview-head {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         justify-content: space-between;
         gap: 16px;
         margin-bottom: 6px;
+        flex-wrap: wrap;
       }
       .yaml-preview-head h3 {
         margin-bottom: 0;
@@ -924,23 +946,6 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        padding: 6px 14px;
-        background: transparent;
-        color: var(--ink-mute);
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        font-family: inherit;
-        font-size: 0.88em;
-        cursor: pointer;
-        transition:
-          background 0.15s ease,
-          color 0.15s ease,
-          border-color 0.15s ease;
-      }
-      .back-btn:hover {
-        background: var(--surface-soft);
-        color: var(--ink);
-        border-color: var(--ink-soft);
       }
       .back-btn span {
         font-size: 1.05em;
@@ -970,6 +975,12 @@
         color: var(--ink-soft);
         font-size: 0.82em;
         margin-top: 4px;
+      }
+      .yaml-preview-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
       }
 
       @media (max-width: 900px) {
@@ -1051,14 +1062,8 @@
           <span class="show-uncommon-label">Show advanced options</span>
         </button>
       </nav>
-      <div class="sidebar-links">
-        <a href="https://seqera.io/multiqc/" target="_blank" rel="noopener">seqera.io/multiqc</a>
-        <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">Documentation</a>
-        <a href="https://github.com/MultiQC/MultiQC" target="_blank" rel="noopener">GitHub</a>
-      </div>
       <div class="sidebar-actions">
-        <button id="previewBtn" class="btn btn-primary" onclick="previewYaml()">Preview YAML</button>
-        <button class="btn btn-success" onclick="downloadConfig()">Download Config</button>
+        <button id="previewBtn" class="btn btn-success" onclick="previewYaml()">Preview YAML</button>
         <button class="btn btn-secondary" onclick="resetConfig()">Reset All</button>
       </div>
     </aside>
@@ -1079,9 +1084,13 @@
           </p>
           <p>
             Browse sections in the sidebar, or use the search bar above to find a specific option. When you are done,
-            click <strong>Preview YAML</strong> or <strong>Download Config</strong> below. For full documentation, visit
-            <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">docs.seqera.io/multiqc</a>.
+            click <strong>Preview YAML</strong> below.
           </p>
+          <div class="welcome-links">
+            <a href="https://seqera.io/multiqc/" target="_blank" rel="noopener">MultiQC Homepage</a>
+            <a href="https://docs.seqera.io/multiqc" target="_blank" rel="noopener">Documentation</a>
+            <a href="https://github.com/MultiQC/MultiQC" target="_blank" rel="noopener">GitHub</a>
+          </div>
         </div>
 
         <div id="sections"></div>
@@ -1091,9 +1100,13 @@
         <div class="yaml-preview-section" id="yamlSection" style="display:none;">
           <div class="yaml-preview-head">
             <h3>Generated Configuration</h3>
-            <button class="btn btn-secondary back-btn" onclick="backToEditor()">
-              <span aria-hidden="true">&larr;</span> Back to editor
-            </button>
+            <div class="yaml-preview-actions">
+              <button class="btn btn-secondary back-btn" onclick="backToEditor()">
+                <span aria-hidden="true">&larr;</span> Back to editor
+              </button>
+              <button id="copyBtn" class="btn btn-primary" onclick="copyConfig()">Copy to clipboard</button>
+              <button class="btn btn-success" onclick="downloadConfig()">Download config</button>
+            </div>
           </div>
           <p>Copy this content to <code>multiqc_config.yaml</code> in your project directory.</p>
           <p class="fields-set-count" id="fieldsSetCount"></p>
@@ -1139,6 +1152,16 @@
 
       let currentConfig = {};
 
+      // {sectionName: commonCount}, computed once at init from configData.
+      // Used by both the sidebar TOC and the in-page section headings to
+      // decide which sections are entirely advanced.
+      const sectionCommonCounts = Object.fromEntries(
+        Object.entries(configData).map(([name, props]) => [
+          name,
+          Object.values(props).filter((p) => !p.uncommon).length,
+        ]),
+      );
+
       function initWizard() {
         createSectionNavigation();
         createSectionContent();
@@ -1167,9 +1190,12 @@
           a.href = "#section-" + slugify(sectionName);
           a.textContent = sectionName;
           a.dataset.section = sectionName;
+          const commonCount = sectionCommonCounts[sectionName];
+          // Sections that are entirely advanced (eg. MegaQC) are hidden from the
+          // sidebar until the user toggles "Show advanced options" on.
+          if (commonCount === 0) li.classList.add("nav-advanced-only");
           const badge = document.createElement("span");
           badge.className = "badge";
-          const commonCount = Object.values(sectionProps).filter((p) => !p.uncommon).length;
           badge.textContent = commonCount;
           a.appendChild(badge);
           a.onclick = (e) => {
@@ -1200,6 +1226,7 @@
           h2.id = "section-" + slugify(sectionName);
           h2.dataset.section = sectionName;
           h2.textContent = sectionName;
+          if (sectionCommonCounts[sectionName] === 0) h2.classList.add("advanced-only");
           sectionsContainer.appendChild(h2);
 
           Object.entries(sectionProps).forEach(([propName, propData]) => {
@@ -1271,7 +1298,7 @@
         if (propData.description) {
           const desc = document.createElement("div");
           desc.className = "description";
-          desc.textContent = propData.description;
+          desc.innerHTML = renderInlineMd(propData.description);
           formGroup.appendChild(desc);
         }
 
@@ -1330,82 +1357,13 @@
         let input;
 
         if (propData.enum) {
-          // Small enums render as a segmented toggle like the true/false buttons;
-          // larger enums stay as a dropdown.
-          if (propData.enum.length <= 4) {
-            const wrapper = document.createElement("div");
-            wrapper.className = "bool-toggle";
-            const hidden = document.createElement("input");
-            hidden.type = "hidden";
-            hidden.id = propName;
-            wrapper.appendChild(hidden);
-            const hasDefault = propData.default !== null && propData.default !== undefined;
-            propData.enum.forEach((val) => {
-              const btn = document.createElement("button");
-              btn.type = "button";
-              btn.className = "bool-toggle-btn";
-              btn.dataset.value = val;
-              btn.textContent = val;
-              if (val === propData.default) btn.classList.add("active");
-              btn.onclick = () => {
-                const wasActive = btn.classList.contains("active");
-                // No default → clicking the active button again clears the selection.
-                if (wasActive && !hasDefault) {
-                  btn.classList.remove("active");
-                  hidden.value = "";
-                } else {
-                  wrapper.querySelectorAll(".bool-toggle-btn").forEach((b) => b.classList.toggle("active", b === btn));
-                  hidden.value = val;
-                }
-                updateConfig(propName, hidden);
-              };
-              wrapper.appendChild(btn);
-            });
-            return wrapper;
-          }
-          input = document.createElement("select");
-          const emptyOption = document.createElement("option");
-          emptyOption.value = "";
-          emptyOption.textContent = "";
-          input.appendChild(emptyOption);
-          propData.enum.forEach((value) => {
-            const option = document.createElement("option");
-            option.value = value;
-            option.textContent = value;
-            input.appendChild(option);
-          });
-          input.id = propName;
-          input.onchange = () => updateConfig(propName, input);
-          return input;
+          // No default → clicking the active button again clears the selection.
+          const hasDefault = propData.default !== null && propData.default !== undefined;
+          return buildSegmentedToggle(propName, propData.enum, propData.default, !hasDefault);
         } else if (propData.type === "boolean") {
-          const wrapper = document.createElement("div");
-          wrapper.className = "bool-toggle";
-
-          const hidden = document.createElement("input");
-          hidden.type = "hidden";
-          hidden.id = propName;
-          wrapper.appendChild(hidden);
-
-          const effectiveDefault = propData.default === true;
-          [
-            { val: "true", label: "true" },
-            { val: "false", label: "false" },
-          ].forEach((opt) => {
-            const btn = document.createElement("button");
-            btn.type = "button";
-            btn.className = "bool-toggle-btn";
-            btn.dataset.value = opt.val;
-            btn.textContent = opt.label;
-            if ((opt.val === "true") === effectiveDefault) btn.classList.add("active");
-            btn.onclick = () => {
-              wrapper.querySelectorAll(".bool-toggle-btn").forEach((b) => b.classList.toggle("active", b === btn));
-              hidden.value = opt.val;
-              updateConfig(propName, hidden);
-            };
-            wrapper.appendChild(btn);
-          });
-
-          return wrapper;
+          // Booleans are always either true or false; never deselectable.
+          const activeValue = propData.default === true ? "true" : "false";
+          return buildSegmentedToggle(propName, ["true", "false"], activeValue, false);
         } else if (propData.type === "array" && Array.isArray(propData.items_enum)) {
           const wrapper = document.createElement("div");
           wrapper.className = "checkbox-group";
@@ -1622,8 +1580,6 @@
           input.value = serializeArrayDefault(propData.default);
         } else if (propData.type === "object" && isPrefillableDefault(propData)) {
           input.value = dumpYaml(propData.default);
-        } else if (input.tagName === "SELECT") {
-          input.selectedIndex = 0;
         } else {
           input.value = "";
         }
@@ -1775,7 +1731,7 @@
         const btn = document.getElementById("previewBtn");
         btn.textContent = "Editor";
         btn.onclick = backToEditor;
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo(0, 0);
       }
 
       function backToEditor() {
@@ -1784,7 +1740,7 @@
         const btn = document.getElementById("previewBtn");
         btn.textContent = "Preview YAML";
         btn.onclick = previewYaml;
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        window.scrollTo(0, 0);
       }
 
       function downloadConfig() {
@@ -1805,6 +1761,28 @@
         URL.revokeObjectURL(url);
       }
 
+      function copyConfig() {
+        const btn = document.getElementById("copyBtn");
+        const yaml = document.getElementById("yamlOutput").textContent;
+        const showFeedback = (label) => {
+          const original = btn.dataset.originalLabel || btn.textContent;
+          btn.dataset.originalLabel = original;
+          btn.textContent = label;
+          clearTimeout(btn._copyResetTimer);
+          btn._copyResetTimer = setTimeout(() => {
+            btn.textContent = btn.dataset.originalLabel;
+          }, 1500);
+        };
+        if (!navigator.clipboard) {
+          showFeedback("Clipboard unavailable");
+          return;
+        }
+        navigator.clipboard.writeText(yaml).then(
+          () => showFeedback("Copied!"),
+          () => showFeedback("Copy failed"),
+        );
+      }
+
       function resetConfig() {
         if (!confirm("Reset all configuration? This cannot be undone.")) return;
         currentConfig = {};
@@ -1821,6 +1799,49 @@
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")
           .replace(/(^-|-$)/g, "");
+      }
+
+      // Build a segmented toggle: a row of buttons backed by a hidden input.
+      // Used for booleans and for enums.
+      function buildSegmentedToggle(propName, values, activeValue, allowDeselect) {
+        const wrapper = document.createElement("div");
+        wrapper.className = "bool-toggle";
+        const hidden = document.createElement("input");
+        hidden.type = "hidden";
+        hidden.id = propName;
+        wrapper.appendChild(hidden);
+        values.forEach((val) => {
+          const strVal = String(val);
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "bool-toggle-btn";
+          btn.dataset.value = strVal;
+          btn.textContent = strVal;
+          if (val === activeValue) btn.classList.add("active");
+          btn.onclick = () => {
+            if (allowDeselect && btn.classList.contains("active")) {
+              btn.classList.remove("active");
+              hidden.value = "";
+            } else {
+              wrapper.querySelectorAll(".bool-toggle-btn").forEach((b) => b.classList.toggle("active", b === btn));
+              hidden.value = strVal;
+            }
+            updateConfig(propName, hidden);
+          };
+          wrapper.appendChild(btn);
+        });
+        return wrapper;
+      }
+
+      // Minimal inline markdown for field descriptions: `code`, **bold**, and
+      // [text](url) links. HTML is escaped first so descriptions can't inject
+      // tags directly. Block-level markdown (lists, headings) isn't supported.
+      function renderInlineMd(text) {
+        const escaped = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return escaped
+          .replace(/`([^`]+)`/g, "<code>$1</code>")
+          .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+          .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
       }
 
       document.addEventListener("DOMContentLoaded", function () {
